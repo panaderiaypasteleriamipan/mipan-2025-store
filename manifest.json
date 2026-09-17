@@ -1,39 +1,16 @@
-{
-  "id": "/?utm_source=pwa",
-  "name": "MiPan 2025 Store",
-  "short_name": "MiPan",
-  "description": "Tienda de panadería y repostería de MiPan 2025 C.A.",
-  "lang": "es",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#FFFAF3",
-  "theme_color": "#8B5A2B",
-  "icons": [
-    {
-      "src": "assets/images/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/images/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/images/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "assets/images/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ]
-}
+<!-- Enlace al manifiesto -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- Colores de la interfaz del navegador (Coincidentes con el JSON) -->
+<meta name="theme-color" content="#8B5A2B">
+<meta name="background-color" content="#FFFAF3">
+
+<!-- Soporte para iOS / Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MiPan">
+<link rel="apple-touch-icon" href="assets/images/icon-192.png">
+
+<!-- Favicons para navegador -->
+<link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
