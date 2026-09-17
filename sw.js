@@ -1,33 +1,38 @@
-const CACHE_NAME = 'mipan-store-v1';
-const OFFLINE_URLS = ['./', './index.html', './admin.html', './manifest.json', './assets/css/styles.css', './assets/js/data.js', './assets/js/app.js', './assets/js/admin.js', './assets/images/logo.svg'];
+const CACHE_NAME = 'mipan-cache-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './assets/images/logo.svg',
+  './assets/images/icon-192.png',
+  './assets/images/icon-512.png'
+];
 
+// Instalación del Service Worker y guardado en caché
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
   );
   self.skipWaiting();
 });
 
+// Activación y limpieza de cachés antiguas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    ))
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
   );
   self.clients.claim();
 });
 
+// Estrategia: Red primero, si falla recurre al caché (para estar siempre actualizado offline)
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
-        return response;
-      }).catch(() => caches.match('./index.html'));
-    })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
