@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin MiPan</title>
+    <meta name="theme-color" content="#8b5a2b" />
+    <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body data-page="admin">
+    <header class="topbar">
+      <div class="container nav-wrap">
+        <a href="index.html" class="brand" aria-label="Volver a la tienda">
+          <img src="assets/images/logo.svg" alt="Logo MiPan" />
+          <div>
+            <strong>MiPan</strong>
+            <span>Panel admin</span>
+          </div>
+        </a>
+        <div class="nav-actions">
+          <a class="btn btn-secondary" href="index.html">Volver a tienda</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-shell">
+      <section class="panel">
+        <div class="section-head compact">
+          <div>
+            <span class="eyebrow">Administrador</span>
+            <h2>Agregar producto</h2>
+          </div>
+        </div>
+
+        <form id="productForm" class="product-form">
+          <div class="field-row">
+            <label>
+              Nombre
+              <input type="text" id="name" required />
+            </label>
+            <label>
+              Categoría
+              <select id="category" required>
+                <option value="panes">Panes</option>
+                <option value="reposteria">Repostería</option>
+                <option value="dulces">Dulces</option>
+                <option value="tortas">Tortas</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label>
+              Precio (Bsf.)
+              <input type="number" id="price" min="1" step="0.01" required />
+            </label>
+            <label>
+              Stock
+              <input type="number" id="stock" min="0" step="1" required />
+            </label>
+          </div>
+
+          <label>
+            Descripción
+            <textarea id="description" rows="3" required></textarea>
+          </label>
+
+          <div class="field-actions">
+            <button class="btn btn-primary" type="submit">Guardar producto</button>
+            <button class="btn btn-secondary" type="reset">Limpiar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="section-head compact">
+          <div>
+            <span class="eyebrow">Inventario</span>
+            <h2>Productos activos</h2>
+          </div>
+        </div>
+
+        <div id="adminProductList" class="admin-list"></div>
+      </section>
+    </main>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/admin.js"></script>
+  </body>
+</html>

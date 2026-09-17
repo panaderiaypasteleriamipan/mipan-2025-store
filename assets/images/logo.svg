@@ -1,0 +1,291 @@
+const PRODUCT_STORAGE_KEY = 'mipan-products';
+const CART_STORAGE_KEY = 'mipan-cart';
+
+const readProducts = () => {
+  const stored = localStorage.getItem(PRODUCT_STORAGE_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.warn('No se pudo leer productos locales. Se usarán los predeterminados.');
+    }
+  }
+  localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(window.MIPAN_DEFAULT_PRODUCTS));
+  return window.MIPAN_DEFAULT_PRODUCTS;
+};
+
+const saveProducts = (products) => {
+  localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
+};
+
+const readCart = () => {
+  const stored = localStorage.getItem(CART_STORAGE_KEY);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return [];
+  }
+};
+
+const saveCart = (cart) => {
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+};
+
+const formatPrice = (value) => `Bsf. ${Number(value).toFixed(2)}`;
+
+const state = {
+  currentCategory: 'all',
+  search: '',
+  cart: readCart(),
+  products: readProducts()
+};
+
+const renderProducts = () => {
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  const filtered = state.products.filter((product) => {
+    const matchesCategory = state.currentCategory === 'all' || product.category === state.currentCategory;
+    const matchesSearch = product.name.toLowerCase().includes(state.search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state">No encontramos productos con ese criterio.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((product) => `
+    <article class="product-card">
+      <div class="product-image" aria-label="${product.name}">${product.emoji}</div>
+      <div class="product-body">
+        <div class="product-topline">
+          <span class="tag">${product.category}</span>
+          <span class="stock">Stock: ${product.stock}</span>
+        </div>
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <div class="product-meta">
+          <span class="price">${formatPrice(product.price)}</span>
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-primary" data-add="${product.id}">Agregar</button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+};
+
+const addToCart = (productId) => {
+  const product = state.products.find((item) => item.id === Number(productId));
+  if (!product) return;
+
+  const existing = state.cart.find((item) => item.id === product.id);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    state.cart.push({ id: product.id, quantity: 1 });
+  }
+
+  saveCart(state.cart);
+  updateCartUI();
+};
+
+const updateCartUI = () => {
+  const cartCounter = document.getElementById('cartCounter');
+  const cartItems = document.getElementById('cartItems');
+  const cartTotal = document.getElementById('cartTotal');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  if (cartCounter) {
+    const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCounter.textContent = totalItems;
+  }
+
+  if (!cartItems) return;
+
+  if (state.cart.length === 0) {
+    cartItems.innerHTML = '<div class="empty-state">Tu carrito está vacío.</div>';
+    if (cartTotal) cartTotal.textContent = 'Bsf. 0.00';
+    if (checkoutBtn) {
+      checkoutBtn.href = 'https://wa.me/584140000000?text=Hola%20MiPan%202025%20quiero%20hacer%20mi%20pedido';
+      checkoutBtn.textContent = 'Hacer pedido';
+    }
+    return;
+  }
+
+  const lines = state.cart.map((cartItem) => {
+    const product = state.products.find((item) => item.id === cartItem.id);
+    if (!product) return null;
+
+    return `
+      <div class="cart-row">
+        <div class="cart-item-info">
+          <h4>${product.name}</h4>
+          <div class="cart-item-meta">
+            <span>${formatPrice(product.price)}</span>
+            <div class="qty-controls">
+              <button data-qty="minus" data-id="${product.id}">-</button>
+              <span>${cartItem.quantity}</span>
+              <button data-qty="plus" data-id="${product.id}">+</button>
+            </div>
+          </div>
+        </div>
+        <strong>${formatPrice(product.price * cartItem.quantity)}</strong>
+      </div>
+    `;
+  }).filter(Boolean).join('');
+
+  cartItems.innerHTML = lines;
+
+  const total = state.cart.reduce((sum, item) => {
+    const product = state.products.find((productItem) => productItem.id === item.id);
+    return sum + (product ? product.price * item.quantity : 0);
+  }, 0);
+
+  if (cartTotal) cartTotal.textContent = formatPrice(total);
+
+  if (checkoutBtn) {
+    const message = encodeURIComponent(
+      `Hola MiPan 2025, quiero hacer este pedido:\n${state.cart.map((item) => {
+        const product = state.products.find((productItem) => productItem.id === item.id);
+        return `- ${product?.name} x ${item.quantity}`;
+      }).join('\n')}`
+    );
+    checkoutBtn.href = `https://wa.me/584140000000?text=${message}`;
+    checkoutBtn.textContent = 'Finalizar pedido';
+  }
+};
+
+const changeCartQuantity = (productId, direction) => {
+  const cartItem = state.cart.find((item) => item.id === Number(productId));
+  if (!cartItem) return;
+
+  if (direction === 'plus') {
+    cartItem.quantity += 1;
+  } else {
+    cartItem.quantity -= 1;
+    if (cartItem.quantity <= 0) {
+      state.cart = state.cart.filter((item) => item.id !== Number(productId));
+    }
+  }
+
+  saveCart(state.cart);
+  updateCartUI();
+};
+
+const initializeHome = () => {
+  const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const cartToggle = document.getElementById('toggleCart');
+  const closeCart = document.getElementById('closeCart');
+  const cartPanel = document.getElementById('cartPanel');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (event) => {
+      state.search = event.target.value.trim();
+      renderProducts();
+    });
+  }
+
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', (event) => {
+      state.currentCategory = event.target.value;
+      renderProducts();
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    const addButton = event.target.closest('[data-add]');
+    const qtyButton = event.target.closest('[data-qty]');
+
+    if (addButton) {
+      addToCart(addButton.dataset.add);
+    }
+
+    if (qtyButton) {
+      changeCartQuantity(qtyButton.dataset.id, qtyButton.dataset.qty);
+    }
+  });
+
+  if (cartToggle) {
+    cartToggle.addEventListener('click', () => cartPanel?.classList.toggle('open'));
+  }
+
+  if (closeCart) {
+    closeCart.addEventListener('click', () => cartPanel?.classList.remove('open'));
+  }
+
+  renderProducts();
+  updateCartUI();
+};
+
+const initializeAdmin = () => {
+  const form = document.getElementById('productForm');
+  const list = document.getElementById('adminProductList');
+
+  if (!form || !list) return;
+
+  const renderAdminProducts = () => {
+    if (!state.products.length) {
+      list.innerHTML = '<div class="empty-state">No hay productos registrados.</div>';
+      return;
+    }
+
+    list.innerHTML = state.products.map((product) => `
+      <div class="admin-item">
+        <div>
+          <h4>${product.name}</h4>
+          <span>${product.category} • ${formatPrice(product.price)} • Stock: ${product.stock}</span>
+        </div>
+        <button class="delete-btn" data-delete="${product.id}">Eliminar</button>
+      </div>
+    `).join('');
+  };
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const newProduct = {
+      id: Date.now(),
+      name: document.getElementById('name').value.trim(),
+      category: document.getElementById('category').value,
+      price: Number(document.getElementById('price').value),
+      stock: Number(document.getElementById('stock').value),
+      description: document.getElementById('description').value.trim(),
+      emoji: '✨'
+    };
+
+    if (!newProduct.name || !newProduct.description || Number.isNaN(newProduct.price) || Number.isNaN(newProduct.stock)) {
+      return;
+    }
+
+    state.products.unshift(newProduct);
+    saveProducts(state.products);
+    form.reset();
+    renderAdminProducts();
+  });
+
+  list.addEventListener('click', (event) => {
+    const deleteButton = event.target.closest('[data-delete]');
+    if (!deleteButton) return;
+
+    const productId = Number(deleteButton.dataset.delete);
+    state.products = state.products.filter((product) => product.id !== productId);
+    saveProducts(state.products);
+    renderAdminProducts();
+  });
+
+  renderAdminProducts();
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (document.body.dataset.page === 'home') {
+    initializeHome();
+  }
+
+  if (document.body.dataset.page === 'admin') {
+    initializeAdmin();
+  }
+});

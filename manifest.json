@@ -1,0 +1,17 @@
+{
+  "name": "MiPan 2025 Store",
+  "short_name": "MiPan",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffaf3",
+  "theme_color": "#8b5a2b",
+  "description": "Tienda de panadería y repostería de MiPan 2025 C.A.",
+  "icons": [
+    {
+      "src": "assets/images/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
